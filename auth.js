@@ -6,7 +6,7 @@
 /* ── GOOGLE IDENTITY INITIALIZATION ── */
 window.onload = function () {
   google.accounts.id.initialize({
-    client_id: 881716006091-o7ork239fc5o224b2oduajfnggsherd9.apps.googleusercontent.com,
+    client_id: "881716006091-o7ork239fc5o224b2oduajfnggsherd9.apps.googleusercontent.com",
     callback: handleGoogleSignIn
   });
   const signinBtn = document.getElementById("google-signin-btn");
@@ -248,6 +248,10 @@ function handleEmailRegister(event) {
 
 /* ── GOOGLE AUTHENTICATION TOKEN PARSER ── */
 function handleGoogleSignIn(response) {
+  if (!response || !response.credential) {
+    console.error("Google Auth Error: No credential received.");
+    return;
+  }
   try {
     const base64Url = response.credential.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -389,7 +393,7 @@ function setLoading(btn, isLoading) {
     btn.disabled = true;
   } else {
     if (text) text.classList.remove('hidden');
-    if (loading) loading.classList.add('hidden');
+    if (loading) loading.classList.remove('hidden');
     btn.disabled = false;
   }
 }
