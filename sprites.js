@@ -264,6 +264,15 @@ const PLAYER_PALETTE_ATTACK = { ...PLAYER_PALETTE, 'W': '#ffe070' };
  * @param {boolean} isAttacking - use attack frame if true (down only for now)
  */
 function drawPlayerSprite(ctx, direction, frameIndex, x, y, size, isAttacking) {
+  // Real sprite sheet path (if hero.png was provided)
+  if (window.Assets && window.Assets.hasImage('player_hero')) {
+    return drawSpriteSheetFrame(ctx, window.Assets.getImage('player_hero'), {
+      direction, frameIndex, isAttacking, x, y, size,
+      frameSize: 64,
+      rows: { down: 0, up: 1, left: 2, right: 2, attackDown: 3 }
+    });
+  }
+
   let frames = PLAYER_FRAMES[direction] || PLAYER_FRAMES.down;
   let palette = PLAYER_PALETTE;
   let flip = false;
@@ -279,6 +288,31 @@ function drawPlayerSprite(ctx, direction, frameIndex, x, y, size, isAttacking) {
   const px = size / cols;
 
   drawPixelMap(ctx, map, palette, x, y, px, flip);
+}
+
+/**
+ * Generic sprite-sheet frame drawer for real PNG assets.
+ * Assumes a horizontal-strip layout: one row per animation state,
+ * frameSize x frameSize per frame, rows ordered per the `rows` map.
+ */
+function drawSpriteSheetFrame(ctx, img, opts) {
+  const { direction, frameIndex, isAttacking, x, y, size, frameSize, rows } = opts;
+  const rowKey = isAttacking && rows.attackDown !== undefined ? 'attackDown' : direction;
+  const row = rows[rowKey] ?? 0;
+  const flip = direction === 'right' && rows.left !== undefined && rows.right === rows.left;
+
+  const framesPerRow = Math.floor(img.width / frameSize);
+  const col = frameIndex % Math.max(1, framesPerRow);
+
+  ctx.save();
+  if (flip) {
+    ctx.translate(x + size, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, col * frameSize, row * frameSize, frameSize, frameSize, 0, 0, size, size);
+  } else {
+    ctx.drawImage(img, col * frameSize, row * frameSize, frameSize, frameSize, x, y, size, size);
+  }
+  ctx.restore();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -406,6 +440,24 @@ const ENEMY_SPRITES = {
  * @param {boolean} flipX
  */
 function drawEnemySprite(ctx, type, frameIndex, x, y, size, flipX = false) {
+  if (window.Assets && window.Assets.hasImage('enemy_' + type)) {
+    const img = window.Assets.getImage('enemy_' + type);
+    const frameSize = 64;
+    const framesPerRow = Math.floor(img.width / frameSize);
+    const col = frameIndex % Math.max(1, framesPerRow);
+
+    ctx.save();
+    if (flipX) {
+      ctx.translate(x + size, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, col * frameSize, 0, frameSize, frameSize, 0, 0, size, size);
+    } else {
+      ctx.drawImage(img, col * frameSize, 0, frameSize, frameSize, x, y, size, size);
+    }
+    ctx.restore();
+    return;
+  }
+
   const sprite = ENEMY_SPRITES[type] || ENEMY_SPRITES.grunt;
   const map = sprite.frames[frameIndex % sprite.frames.length];
   const cols = map[0].length;

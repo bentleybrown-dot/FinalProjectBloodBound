@@ -519,6 +519,33 @@ class MapManager {
     return this.data.exits?.find(e => e.x === tx && e.y === ty) || null;
   }
 
+  /* Render parallax background layers (real images, if provided) behind tiles */
+  renderBackground(ctx, camera) {
+    if (!window.Assets) return;
+    const layers = window.Assets.getParallaxLayers(this.currentChapter);
+    if (layers.length === 0) return;
+
+    const depthSpeed = { far: 0.2, mid: 0.5, near: 0.8, bg: 0.3 };
+
+    for (const { key, layer } of layers) {
+      const img = window.Assets.getImage(key);
+      if (!img) continue;
+      const speed = depthSpeed[layer] ?? 0.4;
+
+      // Scale image to cover camera height, tile horizontally for seamless scroll
+      const scale = camera.height / img.height;
+      const drawW = img.width * scale;
+      const drawH = camera.height;
+
+      const offsetX = -(camera.x * speed) % drawW;
+      let startX = offsetX - drawW;
+      while (startX < camera.width) {
+        ctx.drawImage(img, startX, 0, drawW, drawH);
+        startX += drawW;
+      }
+    }
+  }
+
   update(dt) {
     this.animTick += dt;
   }
