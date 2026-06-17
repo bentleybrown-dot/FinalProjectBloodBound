@@ -261,7 +261,7 @@ function handleGoogleSignIn(response) {
 
     const googleUser = JSON.parse(jsonPayload);
     
-    const username = googleUser.name.replace(/[^a-zA-Z0-9_]/g, ''); 
+    const username = (googleUser.name || "user").replace(/[^a-zA-Z0-9_]/g, ''); 
     const profilePicUrl = googleUser.picture;
 
     localStorage.setItem('bb_current_user', username);
